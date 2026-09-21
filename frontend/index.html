@@ -6,7 +6,7 @@
 <title>Protein Atlas — Protein Sequence Analysis &amp; Bioinformatics</title>
 <meta name="description" content="Protein Atlas is a web-based protein sequence analysis platform for exploring proteins, physicochemical properties, amino-acid composition, PROSITE motifs, sequence comparison, dataset statistics, and interactive 3D structures.">
 <meta name="keywords" content="protein sequence analysis, bioinformatics, protein analysis, UniProt, PROSITE, amino acid composition, protein structure">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="/static/style.css">
@@ -68,79 +68,179 @@
     <div class="structure-controls" id="structure-controls"></div>
     <button id="structure-close" class="icon-btn structure-close" aria-label="Close viewer">✕</button>
   </div>
+
   <div class="structure-body">
     <div id="structure-canvas" class="structure-canvas"></div>
     <aside id="structure-inspector" class="structure-inspector"></aside>
+
     <div id="structure-loading" class="structure-loading hidden">
       <div class="spinner"></div>
       <span id="structure-loading-text">Loading…</span>
     </div>
+
     <div id="structure-empty" class="structure-empty hidden"></div>
   </div>
-  <p class="structure-hint">Drag to rotate · scroll to zoom · right-drag to pan · click a residue for details · zoom in close to see atoms and bonds <span id="structure-lens-note"></span></p>
+
+  <p class="structure-hint">
+    Drag to rotate · scroll to zoom · right-drag to pan · click a residue for details · zoom in close to see atoms and bonds
+    <span id="structure-lens-note"></span>
+  </p>
 </div>
 
-<noscript><p style="padding:24px;color:#eaf1ec">Protein Atlas needs JavaScript enabled.</p></noscript>
+<noscript>
+  <p style="padding:24px;color:#eaf1ec">Protein Atlas needs JavaScript enabled.</p>
+</noscript>
 
 <script>
 /* Visible error banner: a crash must never leave a silent blank page. */
 (function () {
   function banner(msg) {
     var b = document.getElementById("fatal-banner");
+
     if (!b) {
-      b = document.createElement("div"); b.id = "fatal-banner";
-      b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;background:#3a1512;color:#ffd9d2;border:1px solid #e2725b;border-radius:10px;padding:12px 16px;font:13px/1.5 Inter,system-ui,sans-serif;white-space:pre-wrap";
+      b = document.createElement("div");
+      b.id = "fatal-banner";
+      b.style.cssText =
+        "position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;" +
+        "background:#3a1512;color:#ffd9d2;border:1px solid #e2725b;" +
+        "border-radius:10px;padding:12px 16px;" +
+        "font:13px/1.5 Inter,system-ui,sans-serif;white-space:pre-wrap";
       document.body.appendChild(b);
     }
+
     b.textContent = msg;
   }
+
   window.__banner = banner;
+
   window.addEventListener("error", function (e) {
-    if (e && e.message && !/ResizeObserver/.test(e.message)) banner("Page error: " + e.message + (e.filename ? "\n(" + e.filename.split("/").pop() + ":" + e.lineno + ")" : ""));
+    if (
+      e &&
+      e.message &&
+      !/ResizeObserver/.test(e.message)
+    ) {
+      banner(
+        "Page error: " +
+        e.message +
+        (
+          e.filename
+            ? "\n(" + e.filename.split("/").pop() + ":" + e.lineno + ")"
+            : ""
+        )
+      );
+    }
   });
-  window.addEventListener("unhandledrejection", function (e) { banner("Page error: " + (e.reason && e.reason.message ? e.reason.message : e.reason)); });
+
+  window.addEventListener("unhandledrejection", function (e) {
+    banner(
+      "Page error: " +
+      (
+        e.reason && e.reason.message
+          ? e.reason.message
+          : e.reason
+      )
+    );
+  });
 
   /* Load a library from the first working source. */
   function load(urls, ready) {
     return new Promise(function (resolve) {
       var i = 0;
+
       (function next() {
-        if (ready() || i >= urls.length) return resolve(ready());
+        if (ready() || i >= urls.length) {
+          return resolve(ready());
+        }
+
         var s = document.createElement("script");
-        s.src = urls[i++]; s.onload = next; s.onerror = next;
+        s.src = urls[i++];
+        s.onload = next;
+        s.onerror = next;
+
         document.head.appendChild(s);
       })();
     });
   }
+
   function loadLocal(src) {
     return new Promise(function (resolve, reject) {
       var s = document.createElement("script");
-      s.src = src; s.async = false; s.onload = resolve; s.onerror = function () { reject(new Error("Could not load " + src)); };
+
+      s.src = src;
+      s.async = false;
+      s.onload = resolve;
+      s.onerror = function () {
+        reject(new Error("Could not load " + src));
+      };
+
       document.body.appendChild(s);
     });
   }
-  var chartP = load([
-    "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js",
-    "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
-    "https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"
-  ], function () { return typeof window.Chart !== "undefined"; });
-  var molP = load([
-    "https://3Dmol.org/build/3Dmol-min.js",
-    "https://cdn.jsdelivr.net/npm/3dmol/build/3Dmol-min.js",
-    "https://unpkg.com/3dmol/build/3Dmol-min.js"
-  ], function () { return typeof window.$3Dmol !== "undefined"; });
 
-  Promise.all([chartP, molP]).then(function (ok) {
-    window.__libs = { chart: ok[0], mol: ok[1] };
-    var files = ["core", "charts", "structure", "analysis", "pages", "selftest", "main"];
-    return files.reduce(function (p, f) { return p.then(function () { return loadLocal("/static/js/" + f + ".js"); }); }, Promise.resolve());
-  }).then(function () {
-    if (!window.__libs.chart || !window.__libs.mol) {
-      banner("Some external libraries could not be downloaded: " + (!window.__libs.chart ? "Chart.js (graphs) " : "") + (!window.__libs.mol ? "3Dmol.js (3D viewer)" : "") +
-        "\nThe rest of the site works. Check your internet connection or ad-blocker, then refresh with Ctrl+F5.");
+  var chartP = load(
+    [
+      "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js",
+      "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+      "https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"
+    ],
+    function () {
+      return typeof window.Chart !== "undefined";
     }
-  }).catch(function (error) { banner("Start-up failed: " + error.message); });
+  );
+
+  var molP = load(
+    [
+      "https://3Dmol.org/build/3Dmol-min.js",
+      "https://cdn.jsdelivr.net/npm/3dmol/build/3Dmol-min.js",
+      "https://unpkg.com/3dmol/build/3Dmol-min.js"
+    ],
+    function () {
+      return typeof window.$3Dmol !== "undefined";
+    }
+  );
+
+  Promise.all([chartP, molP])
+    .then(function (ok) {
+      window.__libs = {
+        chart: ok[0],
+        mol: ok[1]
+      };
+
+      var files = [
+        "core",
+        "charts",
+        "structure",
+        "analysis",
+        "pages",
+        "selftest",
+        "main"
+      ];
+
+      return files.reduce(
+        function (p, f) {
+          return p.then(function () {
+            return loadLocal("/static/js/" + f + ".js");
+          });
+        },
+        Promise.resolve()
+      );
+    })
+    .then(function () {
+      if (!window.__libs.chart || !window.__libs.mol) {
+        banner(
+          "Some external libraries could not be downloaded: " +
+          (!window.__libs.chart ? "Chart.js (graphs) " : "") +
+          (!window.__libs.mol ? "3Dmol.js (3D viewer)" : "") +
+          "\nThe rest of the site works. Check your internet connection or ad-blocker, then refresh with Ctrl+F5."
+        );
+      }
+    })
+    .catch(function (error) {
+      banner("Start-up failed: " + error.message);
+    });
 })();
 </script>
+
 </body>
 </html>
+```
