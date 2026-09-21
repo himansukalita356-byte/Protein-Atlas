@@ -1,0 +1,7 @@
+numpy>=1.23
+pandas>=1.5
+matplotlib>=3.6
+fastapi>=0.115
+pydantic>=2.9
+uvicorn[standard]>=0.30
+rich>=13.9

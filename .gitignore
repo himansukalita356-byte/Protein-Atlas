@@ -1,0 +1,29 @@
+
+!prosite_sample.dat
+# Byte-compiled / cache
+# Editor / OS
+# Large data files (fetch these separately - see README)
+# Program output
+# Virtual environments
+*.dat
+*.egg-info/
+*.fa
+*.fasta
+*.py[cod]
+*.pyc
+*.pyo
+.DS_Store
+.atlas_cache/
+.coverage
+.idea/
+.pytest_cache/
+.venv/
+.vscode/
+Thumbs.db
+__pycache__/
+env/
+htmlcov/
+protein_analyzer_exports/
+venv/
+
+protein-atlas-missing-files/

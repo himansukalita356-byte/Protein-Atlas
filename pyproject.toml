@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "protein-sequence-analyzer"
+version = "3.0.0"
+description = "Protein Atlas: a scientific protein sequence analyzer (CLI + FastAPI service + interactive web app)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy>=1.23",
+    "pandas>=1.5",
+    "matplotlib>=3.6",
+    "fastapi>=0.115",
+    "pydantic>=2.9",
+    "rich>=13.9",
+]
+
+[project.optional-dependencies]
+api = ["uvicorn[standard]>=0.30"]
+test = ["pytest>=8.0", "httpx>=0.27"]
+
+[project.scripts]
+protein-analyzer = "protein_analyzer:main"
+
+[tool.setuptools]
+py-modules = ["protein_analyzer", "api", "atlas_engine", "atlas_services", "atlas_aminoacids"]
+
+[tool.pytest.ini_options]
+testpaths = ["test_engine.py", "test_services.py", "test_aminoacids.py", "test_analyzer.py", "test_api.py"]
+addopts = "-q"
