@@ -81,10 +81,10 @@ class CompareBody(BaseModel):
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     try:
-        prosite.start()                               # background: the server is usable at once
+        prosite.start()
         if os.getenv("ATLAS_PREBUILD_STATS", "1") != "0":
-            dataset_stats.status("human_reviewed")    # starts the one-off background build if needed
-    except Exception:                                 # noqa: BLE001 - startup must never fail on this
+            dataset_stats.status("human_reviewed")
+    except Exception:  # noqa: BLE001 - startup must never fail on this
         log.exception("background start-up tasks could not be started")
     yield
 
@@ -186,7 +186,7 @@ async def _unexpected(request: Request, error: Exception):
 
 
 def engine_calc_error() -> str:
-    return "Analysis unavailable \u2014 calculation error"
+    return "Analysis unavailable — calculation error"
 
 
 # --------------------------------------------------------------------------
@@ -511,6 +511,25 @@ def google_site_verification():
     return FileResponse(
         verification_file,
         media_type="text/html",
+    )
+
+
+# --------------------------------------------------------------------------
+# sitemap
+# --------------------------------------------------------------------------
+@app.get(
+    "/sitemap.xml",
+    include_in_schema=False,
+)
+def sitemap():
+    sitemap_file = (
+        Path(__file__).resolve().parent
+        / "sitemap.xml"
+    )
+
+    return FileResponse(
+        sitemap_file,
+        media_type="application/xml",
     )
 
 
